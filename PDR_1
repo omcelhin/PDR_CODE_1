@@ -1,0 +1,44 @@
+%Housekeeping
+clc
+clear all
+%Load data
+SolarDat(:,:) = csvread('Burlington_solar.csv',6,2);
+
+t= linspace(0,365,8760)';
+h = 1:24';
+H = 15.*(12-h);
+% Loop to evaluate parameters for collector values
+for n=1:365
+    delta(1,n)= 23.45*sind((360/365)*(n-81));
+    Beta(:,n) = asind(cosd(44.5)*cosd(delta(1,n)).*cosd(H)+sind(44.5)*sind(delta(1,n)));
+   
+    for j=1:24
+    theta(j,n) = acosd(cosd(Beta(j,n))*sind(44.5)+sind(Beta(j,n))*cosd(44.5));
+    
+    end
+end
+
+%These can now be used to get values on the collector
+%First the solar data might have to be reorganized to match the theta
+for n=1:365
+    for j = 1:24
+        idx = j*n;
+        Theta(j*n,1) = theta(j,n);
+    end
+end
+
+Ibc=abs(SolarDat(:,6) .* cosd(Theta));
+
+%Diffuse Radiation
+Idc = abs(SolarDat(:,7) .* (.5));
+%Reflected Radiation
+%Commented out for Seed
+%Irc = .2.*(Ibc+Idc).*((1-cosd(44.5))/2);
+Produced = (Idc + Ibc)*.16;
+plot(t(1:48),Produced(1:48))
+%At 
+A= .15;
+Production = A.*Produced;
+
+wHday = sum(Production(1:24))
+
